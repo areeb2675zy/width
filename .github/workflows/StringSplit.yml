@@ -1,0 +1,55 @@
+;format time
+$out_duration = timestamp($ini_duration)
+func timestamp($seconds)
+   local $time[3]
+   _TicksToTime(int($seconds) * 1000, $time[0], $time[1], $time[2])
+   if $time[0] < 10 then $time[0] = '0' & $time[0]
+   if $time[1] < 10 then $time[1] = '0' & $time[1]
+   if $time[2] < 10 then $time[2] = '0' & $time[2]
+   return $time[0] & ':' & $time[1] & ':' & $time[2]
+endfunc
+
+
+;format date
+local $month[12] = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+$out_date = $month[$ini_date[1] - 1] & ' ' & $ini_date[2] & ', ' & $ini_date[0] & ', ' & $ini_date[3] & ':' & $ini_date[4] & ':' & $ini_date[5]
+
+
+;format file size
+select
+   case $ini_size >= 1024^3 ;gigabytes
+      $out_size = ($ini_size / 1024^3)  & ' GB'
+   case $ini_size >= 1024^2 ;megabytes
+      $out_size = ($ini_size / 1024^2)  & ' MB'
+   case $ini_size >= 1024   ;kilobytes
+      $out_size = ($ini_size / 1024)    & ' KB'
+   case else   ;  <  1024   bytes
+      $out_size = $ini_size         & ' B'
+endselect
+$out_size = stringformat("%.2f", $out_size)
+
+
+;format dimension
+$out_resolution = $ini_width & 'x' & $ini_height
+
+
+;format fps
+$out_fps = StringSplit($ini_fps, '/', 2)
+$out_fps = $out_fps[0] / $out_fps[1]
+$out_fps = stringformat("%.2f", $out_fps)
+
+
+;create metadata header using imagemagick
+local $header_text1 = ''
+local $header_text2 = ''
+if $config_header <> 'none' then
+   for $item in $config_header
+      select
+      case ($item = 'name') or ($item = 'n')
+         $header_text1 &= 'File name   \n'
+         $header_text2 &= ':  ' & $ini_name & '\n'
+      case ($item = 'size') or ($item = 's')
+         $header_text1 &= 'File size   \n'
+         $header_text2 &= ':  ' & $out_size & '\n'
+      case ($item = 'resolution') or ($item = 'res') or ($item = 'r')
+         $header_text1 &= 'Resolution  \n'
